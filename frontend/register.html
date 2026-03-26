@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Bank Account</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0B3C5D, #328CC1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .form-box {
+      background: white;
+      padding: 30px;
+      width: 400px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0B3C5D;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #0B3C5D;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #328CC1;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="form-box">
+  <h2>Create Bank Account</h2>
+
+  <input id="name" placeholder="Full Name">
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <input id="email" placeholder="Email">
+  <input id="phone" placeholder="Phone Number">
+
+  <select id="accountType">
+    <option value="">Select Account Type</option>
+    <option>Savings</option>
+    <option>Current</option>
+  </select>
+
+  <!-- NEW FIELD -->
+  <input id="deposit" type="number" placeholder="Initial Deposit Amount">
+
+  <button onclick="register()">Create Account</button>
+
+  <div class="link">
+    Already have account? <a href="index.html">Login</a>
+  </div>
+</div>
+
+<script>
+async function register() {
+  const name = document.getElementById("name").value;
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const phone = document.getElementById("phone").value;
+  const accountType = document.getElementById("accountType").value;
+  const deposit = document.getElementById("deposit").value;
+
+  if(!name || !username || !password || !email || !phone || !accountType || !deposit){
+    alert("Please fill all details");
+    return;
+  }
+
+  if(deposit < 500){
+    alert("Minimum deposit is ₹500");
+    return;
+  }
+
+  const res = await fetch("http://localhost:3000/api/register", {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      name,
+      username,
+      password,
+      email,
+      phone,
+      accountType,
+      balance: Number(deposit)   // 💰 IMPORTANT
+    })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+
+  if(data.message.includes("Successfully")){
+    window.location = "index.html";
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Transfer Money</title>
+
+<style>
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI',sans-serif;
+}
+
+body {
+  height:100vh;
+  background: linear-gradient(135deg,#0B3C5D,#328CC1);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* CARD */
+.card {
+  background:white;
+  width:350px;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  animation:fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(20px);}
+  to {opacity:1; transform:translateY(0);}
+}
+
+h2 {
+  text-align:center;
+  color:#0B3C5D;
+  margin-bottom:15px;
+}
+
+/* INPUTS */
+input, select {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+  transition:0.3s;
+}
+
+input:focus, select:focus {
+  border-color:#328CC1;
+  outline:none;
+  box-shadow:0 0 5px rgba(50,140,193,0.5);
+}
+
+/* BUTTON */
+button {
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background: linear-gradient(90deg,#0B3C5D,#328CC1);
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover {
+  transform:scale(1.03);
+  opacity:0.9;
+}
+
+/* BACK BUTTON */
+.back {
+  background:#ddd;
+  color:#333;
+}
+
+/* INFO */
+.info {
+  font-size:13px;
+  color:gray;
+  text-align:center;
+  margin-top:8px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="card" id="cardBox">
+
+<h2>💸 Transfer Money</h2>
+
+<select id="payeeList">
+  <option value="">Select Saved Payee</option>
+</select>
+
+<input id="toAccount" placeholder="Enter Account Number">
+
+<input id="amount" type="number" placeholder="Enter Amount">
+
+<button onclick="sendOTP()">Send OTP</button>
+
+<input id="otp" placeholder="Enter OTP">
+
+<button onclick="transfer()">Transfer Now</button>
+
+<button class="back" onclick="goBack()">⬅ Back to Dashboard</button>
+
+<p class="info">Secure transfer with OTP verification</p>
+
+</div>
+
+<script>
+const user = localStorage.getItem("user");
+
+if(!user){
+  window.location="index.html";
+}
+
+/* LOAD PAYEES */
+async function loadPayees(){
+  const res = await fetch(`http://localhost:3000/api/user/${user}`);
+  const data = await res.json();
+
+  const list = document.getElementById("payeeList");
+
+  data.payees.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.innerText = p;
+    list.appendChild(opt);
+  });
+}
+
+/* SELECT PAYEE */
+document.getElementById("payeeList").onchange = function(){
+  document.getElementById("toAccount").value = this.value;
+}
+
+/* SEND OTP */
+async function sendOTP(){
+  await fetch("http://localhost:3000/api/send-otp", { method:"POST" });
+  alert("OTP sent! Check server console");
+}
+
+/* TRANSFER WITH SUCCESS ANIMATION */
+async function transfer(){
+  const toAccount = document.getElementById("toAccount").value;
+  const amount = document.getElementById("amount").value;
+  const otp = document.getElementById("otp").value;
+
+  if(!toAccount || !amount || !otp){
+    alert("Please fill all fields");
+    return;
+  }
+
+  const res = await fetch("http://localhost:3000/api/transfer", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      fromUser:user,
+      toAccount,
+      amount:Number(amount),
+      otp
+    })
+  });
+
+  const data = await res.json();
+
+  if(data.message === "Transfer successful"){
+
+    // Replace UI with success animation
+    document.getElementById("cardBox").innerHTML = `
+      <div style="text-align:center;">
+        <div style="font-size:70px; color:green;">✔</div>
+        <h2 style="color:#0B3C5D;">Payment Successful</h2>
+        <p style="color:gray;">Redirecting to dashboard...</p>
+      </div>
+    `;
+
+    // Redirect after 2 seconds
+    setTimeout(() => {
+      window.location = "dashboard.html";
+    }, 2000);
+
+  } else {
+    alert(data.message);
+  }
+}
+
+function goBack(){
+  window.location="dashboard.html";
+}
+
+loadPayees();
+</script>
+
+</body>
+</html>
